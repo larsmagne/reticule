@@ -25,4 +25,3 @@ mv reticule-$version.tar.gz ~www/reticule/html
 cd ~www/reticule/html
 rm -f reticule-snapshot.tar.gz 
 ln -s reticule-$version.tar.gz reticule-snapshot.tar.gz 
-
