@@ -1,0 +1,26 @@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_CONFIG = @GLIB_CONFIG@
+GLIB_LIBS = @GLIB_LIBS@
+GMIME_CONFIG = /usr/local/bin/gmime-config
+GMIME_CFLAGS = `$(GMIME_CONFIG) --cflags`
+GMIME_LIBS = `$(GMIME_CONFIG) --libs`
+MDB_DIR = /home/larsi/gmane/mdb
+
+HEADER_FILES=config.h $(MDB_DIR)/util.h
+
+CPPFLAGS=@CPPFLAGS@ $(GMIME_CFLAGS) -I/usr/local/include -g -O3 -Wall
+LDFLAGS=@LDFLAGS@ $(GMIME_LIBS)
+CC = @CC@ $(CPPFLAGS)
+
+all: phaetond
+
+phaeton.o: phaeton.c $(HEADER_FILES)
+
+phaetond: phaeton.o $(MDB_DIR)/util.o
+	$(CC) $(CPPFLAGS) -o phaetond $(LDFLAGS) phaeton.o $(MDB_DIR)/util.o
+
+clean:
+	$(RM) indexer *.o
+
+TAGS: *.h *.c
+	etags *.[ch]
