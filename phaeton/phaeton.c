@@ -29,7 +29,7 @@ static GHashTable *group_table = NULL;
 static char *reverse_group_table[MAX_GROUPS];
 int active_file = 0;
 char *selected_group = NULL;
-char *group_map = NULL;
+unsigned char *group_map = NULL;
 int group_map_length = 0;
 
 int max_group_id = 0;
@@ -136,11 +136,12 @@ int select_group(char *group) {
 
   map_size = file_size(fd);
   group_map_length = map_size;
-  group_map = (char*)malloc(map_size);
+  group_map = (unsigned char*)malloc(map_size);
   read_block(fd, group_map, map_size);
   close(fd);
 
   selected_group = strdup(group);
+  client.selected_group = 0;
 
   return 1;
 }
@@ -174,5 +175,20 @@ int message_present(int article) {
 
   if (offset > group_map_length)
     return 0;
+
   return (*(group_map + offset)) & (1 << (article % 8));
+}
+
+int selectedp() {
+  int selectedp = (selected_group != NULL);
+  if (selectedp && client.selected_group == 0) {
+    client.selected_group = 1;
+    client.groups++;
+  }
+  return selectedp;
+}
+
+void tputs(char *string, FILE *fp) {
+  client.bytes += strlen(string);
+  fputs(string, fp);
 }

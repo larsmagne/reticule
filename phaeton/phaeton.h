@@ -14,6 +14,7 @@ extern char *host_name;
 extern int active_file;
 extern int max_group_id;
 extern char *selected_group;
+extern char *client_address;
 
 void start_server(int port);
 void message(FILE *client, int code, char *message);
@@ -26,5 +27,19 @@ int isnumerical(char *string);
 char *get_article_name(char *group, int article);
 int message_present(int article);
 char *get_overview_name(char *group, char *extension);
+int selectedp();
+void tputs(char *string, FILE *client);
 
+typedef struct {
+  char *address;
+  int groups;
+  int articles;
+  int bytes;
+  int posts;
+  int rejected;
+  time_t logon;
+  int selected_group;
+} client_t;
+
+extern client_t client;
 #endif
