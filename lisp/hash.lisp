@@ -2,7 +2,7 @@
 
 (defpackage hash
   (:use :cl)
-  (:export generate-password))
+  (:export open-hash close-hash lookup enter))
 
 (in-package :hash)
 
@@ -29,6 +29,10 @@
     (create-empty-hash file-name))
   (setq *hash-file* (open file-name :direction :io
 			  :if-exists :overwrite)))
+
+(defun close-hash ()
+  (close *hash-file*)
+  (setq *hash-file* nil))
 
 (defun hash (string)
   (mod (reduce #'+ (map 'list #'char-code string)) (/ *hash-size* 1024)))
