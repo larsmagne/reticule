@@ -1,16 +1,16 @@
-;;; -*- Mode: lisp; Syntax: ansi-common-lisp; Package: MEDUSA -*-
+;;; -*- Mode: lisp; Syntax: ansi-common-lisp; Package: RETICULE -*-
 
-(defpackage medusa-system
+(defpackage reticule-system
   (:use :cl))
 
-(in-package :medusa-system)
+(in-package :reticule-system)
 
-(asdf:defsystem medusa
+(asdf:defsystem reticule
 	:version "0.1"
 	:components ((:file "server")
 		     (:file "client")
 		     (:file "util")))
 
-(provide :medusa)
+(provide :reticule)
 
  
