@@ -18,6 +18,7 @@
 #include "dispatch.h"
 #include "phaeton.h"
 #include "commands.h"
+#include "misc.h"
 #include <util.h>
 
 int server_socket = 0;
@@ -51,7 +52,7 @@ int handle_command(FILE *client, char **command) {
 void report_stats() {
   syslog(LOG_ALERT, "%s: stats groups:%d articles:%d bytes:%d time:%d\n",
 	 client.address, client.groups, client.articles,
-	 client.bytes, time(NULL) - client.logon);
+	 client.bytes, (int)(time(NULL) - client.logon));
 }
 
 void handle_client(int fd) {

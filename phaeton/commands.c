@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "phaeton.h"
+#include "misc.h"
 #include "commands.h"
 #include <util.h>
 
@@ -156,7 +157,8 @@ int com_help(FILE *client, char **args) {
 void output_overview_line(FILE *client, char *buffer, int article) {
   int present = *buffer & 128;
   int suppressed = *buffer & 64;
-  int spam = *buffer & 32;
+  /* Fixme: should be used. */
+  //int spam = *buffer & 32;
   int crossposts = *buffer & 31;
   char *strings;
   const char *format = "%a, %_d %b %Y %H:%M:%S %z";
