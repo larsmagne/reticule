@@ -1,16 +1,15 @@
 ;;; -*- Mode: lisp; Syntax: ansi-common-lisp; Package: MEDUSA -*-
 
-(defpackage medusa
-  (:use :cl)
-  (:export generate-password))
+(defpackage medusa-system
+  (:use :cl))
 
-(in-package :medusa)
+(in-package :medusa-system)
 
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (require :util "/home/larsi/medusa/lisp/util")
-  (require :client "/home/larsi/medusa/lisp/client")
-  (require :server "/home/larsi/medusa/lisp/server")
-  )
+(asdf:defsystem medusa
+	:version "0.1"
+	:components ((:file "server")
+		     (:file "client")
+		     (:file "util")))
 
 (provide :medusa)
 
