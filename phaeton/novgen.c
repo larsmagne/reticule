@@ -86,7 +86,7 @@ int parse_args(int argc, char **argv) {
 void extend_buffer(int article) {
   int new_size;
   
-  if (article < max_article)
+  if (article < buffer_entries)
     return;
   
   if (buffer_entries == 0)
@@ -94,31 +94,60 @@ void extend_buffer(int article) {
   else
     new_size = buffer_entries * 2;
 
-  mrealloc(buffer, buffer_entries * NOV_BLOCK_SIZE, 
-	   new_size * NOV_BLOCK_SIZE);
+  buffer = mrealloc(buffer, buffer_entries * NOV_BLOCK_SIZE, 
+		    new_size * NOV_BLOCK_SIZE);
 
   buffer_entries = new_size;
   max_article = article;
 }
 
-void strlcpy(char *to, const char *from, int size) {
+void mstrlcpy(char *to, const char *from, int size) {
   strncpy(to, from, size);
   *(to + size) = 0;
+}
+
+void clean_header(char *to) {
+  while (*to) {
+    if (*to == '\t' || 
+	*to == '\n')
+      *to = ' ';
+    to++;
+  }
 }
 
 void hstrcpy(char *to, const char *from) {
   if (from == NULL)
     *to = 0;
-  else
-    strlcpy(to, from, MAX_HEADER_LENGTH);
+  else {
+    mstrlcpy(to, from, MAX_HEADER_LENGTH);
+    clean_header(to);
+  }
+}
+
+void count_part(GMimePart* part, gpointer npa) {
+  parsed_article *pa = (parsed_article*) npa;
+  int length;
+  const char *content;
+
+  content = g_mime_part_get_content(part, &length);
+  pa->chars += length;
+  
+  if (content != NULL) {
+    while ((content = strchr(content, '\n')) != NULL) {
+      content++;
+      pa->lines++;
+    }
+  }
 }
 
 parsed_article *parse_file(const char *file_name) {
   static parsed_article pa;
   GMimeStream *stream;
-  GMimeMessage *msg = 0;
+  GMimeMessage *msg = NULL;
   int offset;
   int file;
+
+  printf("%s\n", file_name);
 
   if ((file = open(file_name, O_RDONLY|O_STREAMING)) == -1) {
     fprintf(stderr, "Can't open %s\n", file_name);
@@ -145,6 +174,8 @@ parsed_article *parse_file(const char *file_name) {
     else
       pa.spamp = 0;
 
+    g_mime_message_foreach_part(msg, count_part, (gpointer) &pa);
+
     g_mime_object_unref(GMIME_OBJECT(msg));
   
   }
@@ -158,6 +189,36 @@ void parse_xref(char *s, post *crosspost) {
   *art = 0;
   crosspost->article = atoi(art + 1);
   crosspost->group_id = group_name_to_id(s);
+}
+
+int string_header_length(parsed_article *pa) {
+  return strlen(pa->message_id) + 1 +
+    strlen(pa->references) + 1 +
+    strlen(pa->from) + 1 +
+    strlen(pa->subject) + 1;
+}
+
+int min(int a, int b) {
+  if (a < b)
+    return a;
+  else
+    return b;
+}
+
+void shorten_string_headers(parsed_article *pa) {
+  char *s;
+  if ((s = strrchr(pa->references, ' ')) != NULL) {
+    *s = 0;
+    return;
+  }
+
+  if (strlen(pa->subject) > 10)
+    *(pa->subject + min(10, strlen(pa->subject) - 10)) = 0;
+
+  if (strlen(pa->from) > 10)
+    *(pa->subject + min(10, strlen(pa->from) - 10)) = 0;
+
+  printf("shortened to %s, %s, %s\n", pa->subject, pa->from, pa->references);
 }
 
 void parse_xrefs(parsed_article *pa) {
@@ -204,7 +265,7 @@ void generate_article(parsed_article *pa) {
   *(int*)buf++ = (int)pa->lines;
   *(int*)buf++ = (int)pa->chars;
   
-  while (string_header_length(pa) > NOV_BLOCK_SIZE - 3 * 4 - 1 - 1)
+  while (string_header_length(pa) > NOV_BLOCK_SIZE - 3 * 4 - 1 - 1) 
     shorten_string_headers(pa);
 
   strcat(buf, pa->subject);
@@ -236,7 +297,7 @@ void generate_group(const char *group) {
     return;
     
   while ((dp = readdir(dirp)) != NULL) {
-    snprintf(file_name, sizeof(file_name), "%s/%s", dir_name,
+    snprintf(file_name, MAX_FILE_NAME, "%s/%s", dir_name,
 	     dp->d_name);
 
     if (stat(file_name, &stat_buf) == -1) {
@@ -257,14 +318,19 @@ int main(int argc, char **argv)
   int dirn;
   char *group;
 
+  g_mime_init(0);
+  read_groups_file();
+
   dirn = parse_args(argc, argv);
   
   if (dirn < argc) {
     group = argv[dirn];
     printf("Generating NOV file for %s\n", group);
     generate_group(group);
-  } else
-    fprintf(stderr, "No group name given\n");
+  } else {
+    generate_group("gmane.discuss");
+    //fprintf(stderr, "No group name given\n");
+  }
 
   exit(0);
 }
