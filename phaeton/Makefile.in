@@ -20,13 +20,16 @@ start.o: start.c $(HEADER_FILES)
 
 daemon.o: daemon.c $(HEADER_FILES)
 
+misc.o: misc.c $(HEADER_FILES)
+
 dispatch.o: dispatch.c $(HEADER_FILES)
 
 commands.o: commands.c $(HEADER_FILES)
 
-phaetond: phaeton.o start.o daemon.o $(MDB_DIR)/util.o dispatch.o commands.o
+phaetond: phaeton.o start.o daemon.o $(MDB_DIR)/util.o dispatch.o commands.o misc.o
 	$(CC) $(CPPFLAGS) -o phaetond $(LDFLAGS) phaeton.o\
-		start.o daemon.o $(MDB_DIR)/util.o dispatch.o commands.o
+		start.o daemon.o $(MDB_DIR)/util.o dispatch.o commands.o\
+		misc.o
 
 clean:
 	$(RM) indexer *.o
