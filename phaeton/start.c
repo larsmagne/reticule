@@ -12,6 +12,7 @@
 #include <time.h>
 
 #include "config.h"
+#include "phaeton.h"
 #include <util.h>
 
 struct option long_options[] = {
@@ -36,7 +37,7 @@ int parse_args(int argc, char **argv) {
       news_spool = optarg;
       break;
       
-    case 'p':
+    case 'r':
       reticule_home = optarg;
       break;
       
@@ -58,6 +59,7 @@ int parse_args(int argc, char **argv) {
 
 int main(int argc, char **argv)
 {
+  int dirn;
 
   dirn = parse_args(argc, argv);
   
@@ -72,18 +74,18 @@ int main(int argc, char **argv)
   }
 
   /* Initialize key/data structures. */
-  init();
-  time(&start_time);
+  start_server(server_port);
 
-  closedown();
-
+  closedown(0);
   exit(0);
 }
 
 void closedown(int i) {
  time_t now = time(NULL);
 
- flush();
+ if (server_socket)
+   close(server_socket);
+
  printf("Closed down at %s", ctime(&now));
  exit(0);
 }
