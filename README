@@ -1,0 +1,21 @@
+Reticule is a new server, but not a Usenet news server.
+
+It was written by and is copyright (c) 2003, 2004 Lars Magne Ingebrigtsen
+<larsi@gnus.org>.  It's released under the GNU General Public License,
+a copy of which is included in this package.
+
+Reticule constists of two parts:
+
+1) The frontend, written in C, called Phaeton.  It's a very thin NNRPD
+   server that only does the the simple things like serving out
+   articles and the like.
+
+2) The backend, written in Lisp, called Reticule.  It does all the
+   storage management and stuff.  Users never talk to Reticule directly.
+
+Phaeton requires the following libraries to compile (and I've given the
+Debian package names here):
+
+libglib1.2-dev
+
+To run Reticule, you need cmucl.
