@@ -1,4 +1,4 @@
-(in-package medusa)
+(in-package reticule)
 
 (defvar *client-port* 8010)
 (defvar *client-socket* nil)
@@ -82,7 +82,7 @@
 	(parameters (cdr spec)))
     (format t "~a~%" spec)
     (if (member command *supported-commands*)
-	(funcall (intern (format nil "HANDLE-~A-COMMAND" command) :medusa)
+	(funcall (intern (format nil "HANDLE-~A-COMMAND" command) :reticule)
 		 parameters)
       (output "500 Unknown command"))))
 

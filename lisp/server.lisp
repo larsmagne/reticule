@@ -1,4 +1,4 @@
-(in-package medusa)
+(in-package reticule)
 
 (defvar *active* nil)
 (defvar *spool* "/mirror/var/spool/news/")
@@ -87,7 +87,7 @@
 			     (setq header (intern
 					   (string-upcase
 					    (subseq full-line 0 colon))
-					   'medusa))
+					   'reticule))
 			     *nov-headers*)
 			(setf (slot-value headers header)
 			      (substitute #\space #\tab
