@@ -354,7 +354,7 @@
 					  :initial-element #\nul))))
     (setf (aref map index)
 	  (code-char (logior (char-code (aref map index))
-			     (ash 1 (1- (mod article 8))))))
+			     (ash 1 (mod article 8)))))
     map))
 
 (defun rebuild-overview (group)
