@@ -1,16 +1,16 @@
 ;;; -*- Mode: lisp; Syntax: ansi-common-lisp; Package: RETICULE -*-
 
-(defpackage reticule-system
-  (:use :cl))
+(defpackage reticule
+  (:use :cl)
+  (:export generate-password))
 
-(in-package :reticule-system)
+(in-package :reticule)
 
-(asdf:defsystem reticule
-	:version "0.1"
-	:components ((:file "server")
-		     (:file "client")
-		     (:file "util")))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (require :util "util")
+  (require :client "client")
+  (require :server "server")
+  (require :hash "hash")
+  )
 
 (provide :reticule)
-
- 
