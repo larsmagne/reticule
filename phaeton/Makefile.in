@@ -6,7 +6,7 @@ GMIME_CFLAGS = `$(GMIME_CONFIG) --cflags`
 GMIME_LIBS = `$(GMIME_CONFIG) --libs`
 MDB_DIR = /home/larsi/gmane/mdb
 
-HEADER_FILES=config.h $(MDB_DIR)/util.h dispatch.h phaeton.h commands.h
+HEADER_FILES=config.h $(MDB_DIR)/util.h dispatch.h phaeton.h commands.h misc.h
 
 CPPFLAGS=@CPPFLAGS@ $(GMIME_CFLAGS) -I$(MDB_DIR) -I/usr/local/include -g -O3 -Wall
 LDFLAGS=@LDFLAGS@ $(GMIME_LIBS)
