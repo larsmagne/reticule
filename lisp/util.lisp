@@ -151,17 +151,6 @@
 	 (t
 	  (error "Unknown directive"))))))))
 
-(defun format-vps-account (account)
-  (concatenate 'string (subseq account 0 5) "." (subseq account 5)))
-
-(defun format-bank-account (account)
-  (concatenate 'string (subseq account 0 4) "."
-	       (subseq account 4 6) "."
-	       (subseq account 6)))
-
-(defun format-birth-number (number)
-  (concatenate 'string (subseq number 0 6) " " (subseq number 6)))
-
 
 (provide :util)
 
