@@ -13,6 +13,7 @@
 
 #include "config.h"
 #include "phaeton.h"
+#include "misc.h"
 #include <util.h>
 
 struct option long_options[] = {
