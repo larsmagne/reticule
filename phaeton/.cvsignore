@@ -2,3 +2,4 @@ Makefile
 *.o
 phaetond
 config*
+novgen
