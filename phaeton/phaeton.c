@@ -14,11 +14,10 @@
 #include <errno.h>
 #include <time.h>
 
-#include "weaver.h"
 #include "config.h"
-#include "hash.h"
-#include "input.h"
-#include "../mdb/util.h"
+#include "phaeton.h"
+#include <util.h>
 
 char *reticule_home = RETICULE_HOME;
 char *spool_directory = SPOOL_DIRECTORY;
+int server_port = SERVER_PORT;
