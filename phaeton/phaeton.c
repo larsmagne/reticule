@@ -29,8 +29,6 @@ char *selected_group = NULL;
 unsigned char *group_map = NULL;
 int group_map_length = 0;
 
-int max_group_id = 0;
-
 void message(FILE *client, int code, char *message) {
   if (code == 0)
     fprintf(client, "%s\r\n", message);
