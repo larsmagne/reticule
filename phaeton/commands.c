@@ -97,52 +97,59 @@ void output_article(FILE *client, char *group, int article) {
   char buffer[1024];
   FILE *art;
   int new_line = 1;
+  char *nl;
 
   if ((art = fopen(file, "r")) == NULL) {
     message(client, 423, "Bad article number");
   } else  {
-    fprintf(client, "220 %d article\r\n", article);
+    fprintf(client, "220 %d <m31yfyurcd.fsf@quimbies.gnus.org> article\r\n", article);
     while (fgets(buffer, 1024, art) != NULL) {
       if (new_line && *buffer == '.')
-	fputs(".", client);
-      fputs(buffer, client);
+	tputs(".", client);
 
-      if (strchr(buffer, '\n'))
+      if ((nl = strchr(buffer, '\n')) != NULL) {
 	new_line = 1;
-      else
+	*nl = '\r';
+	tputs(buffer, client);
+	tputs("\n", client);
+      } else {
 	new_line = 0;
+	tputs(buffer, client);
+      }
+
     }
-    fputs(".\r\n", client);
+    tputs(".\r\n", client);
   }
 }
 
-int com_article(FILE *client, char **args) {
-  if (selected_group == NULL) {
-    message(client, 412, "Not in a newsgroup");
+int com_article(FILE *fp, char **args) {
+  if (! selectedp()) {
+    message(fp, 412, "Not in a newsgroup");
   } else if (*args == NULL) {
-    message(client, 413, "Name a message");
+    message(fp, 413, "Name a message");
   } else if (isnumerical(*args)) {
     if (message_present(atoi(*args))) {
-      output_article(client, selected_group, atoi(*args));
+      output_article(fp, selected_group, atoi(*args));
+      client.articles++;
     } else {
-      message(client, 423, "Bad article number");
+      message(fp, 423, "Bad article number");
     }
   } else {
-    message(client, 413, "Not implemented");
+    message(fp, 413, "Not implemented");
   }
 
   return 0;
 }
 
 int com_help(FILE *client, char **args) {
-  fputs("100 Valid commands\r\n", client);
-  fputs("  mode reader\r\n", client);
-  fputs("  list active\r\n", client);
-  fputs("  group\r\n", client);
-  fputs("  article\r\n", client);
-  fputs("  help\r\n", client);
-  fputs("  over\r\n", client);
-  fputs(".\r\n", client);
+  tputs("100 Valid commands\r\n", client);
+  tputs("  mode reader\r\n", client);
+  tputs("  list active\r\n", client);
+  tputs("  group\r\n", client);
+  tputs("  article\r\n", client);
+  tputs("  help\r\n", client);
+  tputs("  over\r\n", client);
+  tputs(".\r\n", client);
   return 0;
 }
 
@@ -164,38 +171,38 @@ void output_overview_line(FILE *client, char *buffer, int article) {
 
   strings = buffer + 1 + (crossposts * 6) + (4 * 3);
   /* Subject */
-  fputs(strings, client);
-  fputs("\t", client);
+  tputs(strings, client);
+  tputs("\t", client);
   /* From */
   strings += strlen(strings) + 1;
-  fputs(strings, client);
-  fputs("\t", client);
+  tputs(strings, client);
+  tputs("\t", client);
   strings += strlen(strings) + 1;
 
   /* Date */
   time = *((time_t*)(buffer + 1 + (crossposts * 6)));
   date = localtime((const time_t *)&time);
   strftime(date_string, 1024, format, date);
-  fputs(date_string, client);
-  fputs("\t", client);
+  tputs(date_string, client);
+  tputs("\t", client);
 
   /* Message-ID */
-  fputs(strings, client);
-  fputs("\t", client);
+  tputs(strings, client);
+  tputs("\t", client);
   strings += strlen(strings) + 1;
 
   /* References */
-  fputs(strings, client);
-  fputs("\t", client);
+  tputs(strings, client);
+  tputs("\t", client);
   strings += strlen(strings) + 1;
 
   /* Bytes */
   fprintf(client, "%d", *((int*)(buffer + 1 + (crossposts * 6) + 4 + 4)));
-  fputs("\t", client);
+  tputs("\t", client);
 
   /* Lines */
   fprintf(client, "%d", *((int*)(buffer + 1 + (crossposts * 6) + 4)));
-  fputs("\t", client);
+  tputs("\t", client);
 
   /* Xrefs */
   buffer++;
@@ -205,7 +212,7 @@ void output_overview_line(FILE *client, char *buffer, int article) {
 	    *((int*)(buffer+2)));
     buffer += 6;
   }
-  fputs("\r\n", client);
+  tputs("\r\n", client);
 }
 
 void output_overview_lines(FILE *client, int fd, int start, int stop) {
@@ -232,7 +239,7 @@ void output_overview_lines(FILE *client, int fd, int start, int stop) {
     else if (phase == 1 && start + ratio > stop)
       phase = 2;
   }
-  fputs(".\r\n", client);
+  tputs(".\r\n", client);
 }
 
 void output_overview(FILE *client, char *spec) {
@@ -264,7 +271,7 @@ void output_overview(FILE *client, char *spec) {
 }
 
 int com_over(FILE *client, char **args) {
-  if (selected_group == NULL) {
+  if (! selectedp()) {
     message(client, 412, "Not in a newsgroup");
   } else if (*args == NULL) {
     message(client, 413, "Name a message");
