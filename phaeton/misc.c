@@ -21,6 +21,8 @@ char *spool_directory = SPOOL_DIRECTORY;
 GHashTable *group_table = NULL;
 char *reverse_group_table[MAX_GROUPS];
 
+int max_group_id = 0;
+
 char *get_overview_name(char *group, char *extension) {
   static char file_name[1024];
   char *f, *g = group;
@@ -52,7 +54,7 @@ char *reticule_file_name(char *name) {
   return file_name;
 }
 
-void read_groups_file() {
+void read_groups_file(void) {
   FILE *fp;
   char group[MAX_GROUP_NAME_LENGTH], *g;
   int group_id;
@@ -108,3 +110,24 @@ char *get_article_name(char *group, int article) {
   return file_name;
 }
 
+char *get_group_directory(const char *group) {
+  static char file_name[1024];
+  char *f = file_name + strlen(spool_directory);
+  
+  snprintf(file_name, 1024, "%s/%s", spool_directory, group);
+  
+  while (*f != 0) {
+    if (*f == '.')
+      *f = '/';
+    f++;
+  }
+
+  return file_name;
+}
+
+char *mrealloc(char *buffer, int old_size, int new_size) {
+  char *new = cmalloc(new_size);
+  memcpy(new, buffer, old_size);
+  free(buffer);
+  return new;
+}
