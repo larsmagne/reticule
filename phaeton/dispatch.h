@@ -9,8 +9,10 @@
 
 typedef struct {
   char *command;
-  void (*handler)();
+  int (*handler)();
   int type[MAX_ARGUMENTS];
 } dispatcher;
+
+int dispatch(FILE *client, char **command, dispatcher *disp);
 
 #endif

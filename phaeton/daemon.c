@@ -11,9 +11,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <glib.h>
 
 #include "config.h"
+#include "dispatch.h"
 #include "phaeton.h"
+#include "commands.h"
 #include <util.h>
 
 int server_socket = 0;
@@ -26,39 +29,88 @@ union sock {
 #define BUFFER_SIZE 4096
 #define MAX_ITEMS 256
 
+dispatcher dispatchers[] = {
+  {"group", com_group, {STRING, EOA}},
+  {"article", com_article, {STRING, EOA}},
+  {"mode", com_mode, {STRING, EOA}},
+  {"quit", com_quit, {EOA}},
+  {"list", com_list, {EOA}},
+  {"help", com_help, {EOA}},
+  {"over", com_over, {STRING, EOA}},
+  {"xover", com_over, {STRING, EOA}},
+  {NULL, NULL, {0}}  
+};
+
+int handle_command(FILE *client, char **command) {
+  return dispatch(client, command, dispatchers);
+}
+
 void handle_client(int fd) {
   char buffer[BUFFER_SIZE];
   char *expression[MAX_ITEMS];
   char *s;
   int nitems = 0;
-
   int i = 0;
+  int endp = 0;
+  FILE *client;
+  int c, result;
+  char *ret;
 
-  while (read(fd, buffer+i, 1) == 1 &&
-	 *(buffer+i) != '\n' &&
-	 i++ < BUFFER_SIZE)
-    ;
-  if (*(buffer+i) == '\n')
-    *(buffer+i+1) = 0;
-
-  printf("Got %s", buffer);
-
-  s = strtok(buffer, " \n");
-
-  while (s && nitems < MAX_ITEMS) {
-    expression[nitems++] = s;
-    s = strtok(NULL, " \n");
+  if (! (client = fdopen(fd, "r+"))) {
+    printf("Couldn't fdopen\n");
+    exit(-1);
   }
+
+  printf("Got connection.\n");
+
+  com_hello(client, NULL);
+  fflush(client);
+
+  open_active_file();
+
+  while (! endp) {
+    i = 0;
+    nitems = 0;
+
+    while (((c = fgetc(client)) != EOF) &&
+	   (*(buffer+i) = (char) c) &&
+	   *(buffer+i) != '\n' &&
+	   i++ < BUFFER_SIZE)
+      ;
+
+    if (c == EOF)
+      goto out;
+
+    if ((ret = strchr(buffer, '\r')) != NULL)
+      *ret = 0;
+
+    if ((ret = strchr(buffer, '\n')) != NULL)
+      *ret = 0;
+      
+    printf("Got '%s'\n", buffer);
+
+    s = strtok(buffer, " \n");
+
+    while (s && nitems < MAX_ITEMS) {
+      expression[nitems++] = s;
+      s = strtok(NULL, " \n");
+    }
     
-  expression[nitems] = NULL;
+    expression[nitems] = NULL;
 
-  if (nitems >= 1) {
-    if (!strcmp(expression[0], "search")) {
-      printf("Searching...\n");
-    } else if (!strcmp(expression[0], "index")) {
-    } 
+    if (nitems >= 1) {
+      result = handle_command(client, expression);
+      if (result < 0)
+	message(client, 500, "Unknown command");
+      else if (result > 0)
+	endp = 1;
+      fflush(client);
+    }
   }
 
+ out:
+
+  fclose(client);
   close(fd);
 
   printf("Connection closed\n");
@@ -94,8 +146,9 @@ void start_server(int port) {
     exit(1);
   }
 
-  printf("Accepting (spool %s, Reticule %s)...\n",
-	 news_spool, reticule_home);
+  read_groups_file();
+
+  printf("Accepting (spool %s)...\n", news_spool);
 
   while (1) {
     nitems = 0;
