@@ -7,13 +7,21 @@ if [ "$version" = "" ]; then
     exit
 fi
 
+if [ "$version" = "snapshot" ]; then
+    version=`date +%Y%m%d`
+fi
+
 cd /tmp
 
-cvs -d /usr/local/cvsroot co gmane/mdb
+cvs -d /usr/local/cvsroot co reticule
 
-mv gmane/mdb we-search-$version
-cd we-search-$version
+mv reticule reticule-$version
+cd reticule-$version/phaeton
 autoconf
 cd ..
-tar czvf we-search-$version.tar.gz we-search-$version
-rm -r we-search-$version
+tar czvf reticule-$version.tar.gz reticule-$version
+rm -r reticule-$version
+mv reticule-$version.tar.gz ~www/weaver/html
+cd ~www/weaver/html
+rm -f reticule-snapshot.tar.gz 
+ln -s reticule-$version.tar.gz reticule-snapshot.tar.gz 
