@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <glib.h>
+#include <syslog.h>
 
 #include "config.h"
 #include "dispatch.h"
@@ -20,6 +21,8 @@
 #include <util.h>
 
 int server_socket = 0;
+
+client_t client;
 
 union sock {
   struct sockaddr s;
@@ -45,23 +48,27 @@ int handle_command(FILE *client, char **command) {
   return dispatch(client, command, dispatchers);
 }
 
+void report_stats() {
+  syslog(LOG_ALERT, "%s: stats groups:%d articles:%d bytes:%d time:%d\n",
+	 client.address, client.groups, client.articles,
+	 client.bytes, time(NULL) - client.logon);
+}
+
 void handle_client(int fd) {
   char buffer[BUFFER_SIZE];
   char *expression[MAX_ITEMS];
   char *s;
   int nitems = 0;
   int i = 0;
-  int endp = 0;
+  int endp = 0, rlen;
   FILE *client;
-  int c, result;
+  int result;
   char *ret;
 
   if (! (client = fdopen(fd, "r+"))) {
     printf("Couldn't fdopen\n");
     exit(-1);
   }
-
-  printf("Got connection.\n");
 
   com_hello(client, NULL);
   fflush(client);
@@ -72,13 +79,12 @@ void handle_client(int fd) {
     i = 0;
     nitems = 0;
 
-    while (((c = fgetc(client)) != EOF) &&
-	   (*(buffer+i) = (char) c) &&
+    while ((rlen = read(fd, buffer+i, 1)) == 1 &&
 	   *(buffer+i) != '\n' &&
 	   i++ < BUFFER_SIZE)
       ;
 
-    if (c == EOF)
+    if (rlen == 0)
       goto out;
 
     if ((ret = strchr(buffer, '\r')) != NULL)
@@ -113,6 +119,8 @@ void handle_client(int fd) {
   fclose(client);
   close(fd);
 
+  report_stats();
+
   printf("Connection closed\n");
   exit(0);
 }
@@ -123,11 +131,14 @@ void start_server(int port) {
   struct sockaddr_in sin, caddr;
   int nitems = 0;
   static int so_reuseaddr = 1;
+  struct hostent *host;
 
   if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     perror("No socket");
     exit(1);
   }
+
+  openlog("phaetond", LOG_PID, LOG_DAEMON);
 
   setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &so_reuseaddr, 
 	     sizeof(so_reuseaddr));
@@ -157,6 +168,22 @@ void start_server(int port) {
     if (fork()) {
       close(wsd);
     } else {
+      getpeername(wsd, (struct sockaddr*)&caddr, &addlen);
+      
+      host = gethostbyaddr( (const void*)&caddr.sin_addr, 
+			    sizeof(struct in_addr), 
+			    AF_INET);
+
+      bzero(&client, sizeof(client));
+
+      if (host != NULL) 
+	client.address = strdup(host->h_name);
+      else
+	client.address = strdup(inet_ntoa(caddr.sin_addr));
+      client.logon = time(NULL);
+
+      syslog(LOG_ALERT, "%s: connection", client.address);
+
       handle_client(wsd);
     }
   }
