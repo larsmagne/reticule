@@ -8,7 +8,7 @@ MDB_DIR = /home/larsi/gmane/mdb
 
 HEADER_FILES=config.h $(MDB_DIR)/util.h
 
-CPPFLAGS=@CPPFLAGS@ $(GMIME_CFLAGS) -I/usr/local/include -g -O3 -Wall
+CPPFLAGS=@CPPFLAGS@ $(GMIME_CFLAGS) -I$(MDB_DIR) -I/usr/local/include -g -O3 -Wall
 LDFLAGS=@LDFLAGS@ $(GMIME_LIBS)
 CC = @CC@ $(CPPFLAGS)
 
@@ -16,8 +16,13 @@ all: phaetond
 
 phaeton.o: phaeton.c $(HEADER_FILES)
 
-phaetond: phaeton.o $(MDB_DIR)/util.o
-	$(CC) $(CPPFLAGS) -o phaetond $(LDFLAGS) phaeton.o $(MDB_DIR)/util.o
+start.o: start.c $(HEADER_FILES)
+
+daemon.o: daemon.c $(HEADER_FILES)
+
+phaetond: phaeton.o start.o daemon.o $(MDB_DIR)/util.o
+	$(CC) $(CPPFLAGS) -o phaetond $(LDFLAGS) phaeton.o\
+		start.o daemon.o $(MDB_DIR)/util.o
 
 clean:
 	$(RM) indexer *.o
